@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="boardMapper">
+	<resultMap id="boardResultSet" type="Board">
+			<id column="board_no" property="boardNo"/>
+			<result column="board_title" property="boardTitle"/>
+			<result column="board_writer" property="boardWriter"/>
+			<result column="board_content" property="boardContent"/>
+			<result column="origin_name" property="originName"/>
+			<result column="change_name" property="changeName"/>
+			<result column="count" property="count"/>
+			<result column="create_date" property="createDate"/>
+			<result column="status" property="status"/>
+	</resultMap>
+	<resultMap type="Reply" id="replyResultSet">
+		<id property="replyNo" column="REPLY_NO"/>
+		<result property="replyContent" column="REPLY_CONTENT"/>
+		<result property="refBoardNo" column="REF_BNO"/>
+		<result property="replyWriter" column="REPLY_WRITER"/>
+		<result property="createDate" column="CREATE_DATE"/>
+	</resultMap>
+	
+	
+	
+	
+	<select id="selectListCount" resultType="_int">
+		SELECT COUNT(*) 
+		FROM BOARD 
+		WHERE STATUS = 'Y'
+	</select>
+	<select id="selectList" resultMap="boardResultSet">
+		SELECT *
+		FROM BOARD
+		WHERE STATUS = 'Y'
+		ORDER BY BOARD_NO DESC
+	</select>	
+	<insert id="insertBoard" parameterType="Board">
+		INSERT INTO BOARD
+		VALUES
+		(SEQ_BNO.NEXTVAL, #{boardTitle}, #{boardContent}, #{boardWriter}, #{originName},
+		 #{changeName}, DEFAULT, SYSDATE, DEFAULT)
+		
+	</insert>
+	<update id="increaseCount" parameterType="_int">
+		UPDATE BOARD
+		SET COUNT = COUNT + 1
+		WHERE BOARD_NO = #{bno} AND STATUS='Y'
+	</update>
+	<select id="selectBoard" resultMap="boardResultSet" parameterType="_int">
+		select *
+		from board
+		where board_no = #{bno} AND STATUS='Y'
+	</select>
+	<update id="updateBoard" parameterType="Board">
+		UPDATE BOARD
+		SET BOARD_TITLE=#{boardTitle}, BOARD_CONTENT=#{boardContent}, ORIGIN_NAME=#{originName}, CHANGE_NAME=#{changeName}
+		WHERE BOARD_NO=#{boardNo}
+		AND STATUS='Y'
+	</update>
+	<update id = "deleteBoard" parameterType="_int">
+		UPDATE BOARD
+		SET STATUS= 'N'
+		WHERE BOARD_NO=#{bno} AND STATUS='Y'
+
+	</update>
+	
+	<select id="selectReplyList" parameterType="_int" resultMap="replyResultSet">
+		<![CDATA[
+		SELECT REPLY_NO,
+			   REPLY_CONTENT,
+			   REPLY_WRITER,
+			   CREATE_DATE
+		FROM REPLY
+		WHERE REF_BNO = #{bno}
+		AND STATUS <> 'N'
+		ORDER BY REPLY_NO DESC
+		]]>
+		
+	</select>
+	<insert id="insertReply" parameterType="Reply">
+		INSERT INTO REPLY
+		VALUES
+		(SEQ_RNO.NEXTVAL, #{replyContent}, #{refBoardNo}, #{replyWriter}, SYSDATE, DEFAULT)
+
+	</insert>
+	
+	<select id="selectTopList" resultMap="boardResultSet">
+		<![CDATA[
+		SELECT *
+		FROM (
+				SELECT *
+				FROM BOARD
+				WHERE STATUS = 'Y'
+				ORDER BY COUNT DESC
+			  )
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+	
+</mapper>
